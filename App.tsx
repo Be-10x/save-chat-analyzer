@@ -191,6 +191,7 @@ const App: React.FC = () => {
          if (errorMessage.includes('API key not valid') ||
             errorMessage.includes('invalid') ||
             errorMessage.includes('API Key must be set') ||
+            errorMessage.includes('environment variable is not set') ||
             errorMessage.includes('Requested entity was not found')) {
           setError("API key configuration error."); // Simplified message trigger
         } else {
@@ -312,9 +313,9 @@ const App: React.FC = () => {
           )}
           {error && error.includes("API key") && (
              <div className="bg-red-100 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 sm:p-6 mb-6 rounded-lg shadow" role="alert">
-              <p className="font-bold text-lg">API Key Configuration Error</p>
+              <p className="font-bold text-lg">Vercel Environment Variable Issue</p>
               <div className="mt-2 text-slate-700 dark:text-slate-300">
-                <p>The application could not connect to the Gemini API. This is usually due to a missing or incorrect API key in the deployment settings.</p>
+                <p>The application could not connect to the Gemini API because the `VITE_API_KEY` is either missing or invalid in your Vercel project's settings.</p>
                 <p className="mt-4 font-semibold">How to fix this:</p>
                 <ul className="list-disc list-inside mt-2 space-y-2 text-sm">
                     <li>
@@ -324,13 +325,16 @@ const App: React.FC = () => {
                         </a>
                     </li>
                     <li>
-                        Ensure there is a variable named exactly <code className="text-indigo-600 dark:text-indigo-400 bg-slate-100 dark:bg-slate-700/50 px-1 py-0.5 rounded">VITE_API_KEY</code>.
+                        Ensure there is a variable with the <strong>Name</strong> set to exactly <code className="text-indigo-600 dark:text-indigo-400 bg-slate-100 dark:bg-slate-700/50 px-1 py-0.5 rounded">VITE_API_KEY</code>.
+                    </li>
+                     <li>
+                        Paste your "central billing API key" into the <strong>Value</strong> field.
                     </li>
                     <li>
-                        Paste your new "central billing API key" from your developer into the 'Value' field for this variable.
+                        <strong>Most Important:</strong> Make sure the variable is applied to all environments by checking the boxes for <strong>Production, Preview, and Development.</strong>
                     </li>
                     <li>
-                        <strong>Crucially, you must redeploy the application</strong> after saving the variable for the change to take effect. You can do this from the "Deployments" tab in Vercel.
+                        Click <strong>Save</strong>, then go to the "Deployments" tab and <strong>Redeploy</strong> your application for the change to take effect.
                     </li>
                 </ul>
               </div>

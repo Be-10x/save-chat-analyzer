@@ -4,6 +4,10 @@ import { SYSTEM_INSTRUCTION, RESPONSE_SCHEMA } from '../constants';
 
 export async function analyzeChatLog(chatLog: string, instructorNames: string): Promise<AnalysisReportData> {
   
+  if (!process.env.VITE_API_KEY) {
+    throw new Error("VITE_API_KEY environment variable is not set. Please check your Vercel project settings.");
+  }
+
   // Use the VITE_ prefix to make the key available in the browser
   const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
 
