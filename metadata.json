@@ -1,0 +1,5 @@
+{
+  "name": "Save Chat Analyzer",
+  "description": "An AI-powered tool to analyze live session chat logs, filter noise, and generate a comprehensive 360-degree report with actionable insights for educators and operations executives.",
+  "requestFramePermissions": []
+}
