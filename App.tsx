@@ -192,7 +192,7 @@ const App: React.FC = () => {
             errorMessage.includes('invalid') ||
             errorMessage.includes('API Key must be set') ||
             errorMessage.includes('Requested entity was not found')) {
-          setError("The configured API key is invalid or missing. Please ensure the API_KEY environment variable is set correctly in your hosting provider's settings and that you have redeployed the application since making the change.");
+          setError("The configured API key is invalid or missing. Please ensure the VITE_API_KEY environment variable is set correctly in your hosting provider's (Vercel) settings and that you have redeployed the application since making the change.");
         } else {
           setError(errorMessage);
         }
