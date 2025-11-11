@@ -85,6 +85,33 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ progress, message
 };
 // --- End of Component ---
 
+// FIX: Use process.env.API_KEY as required by the coding guidelines, and update the API key instructions component to be more generic and admin-focused.
+// --- Updated API Key Instructions Screen for Admins ---
+const ApiKeyInstructions: React.FC = () => {
+  return (
+    <div className="max-w-2xl mx-auto bg-slate-800 rounded-lg shadow-2xl border border-red-500/50">
+      <div className="p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-white mb-2">Environment Variable Configuration Error</h2>
+        <p className="text-slate-300 mb-6">
+          The application could not connect to the Gemini API because the <code className="text-indigo-400 bg-slate-900 px-1.5 py-1 rounded text-sm">API_KEY</code> environment variable is missing or invalid.
+        </p>
+      
+        <div className="text-left text-sm w-full">
+            <h3 className="font-bold text-lg text-slate-200 mb-3">For Administrators:</h3>
+            <ul className="list-disc list-inside space-y-3 text-slate-300">
+                <li>
+                    Please configure the <strong>API_KEY</strong> environment variable in your deployment settings.
+                </li>
+                <li>Ensure the variable is applied to all environments (Production, Preview, and Development).</li>
+                <li>After setting the variable, you may need to redeploy the application for the change to take effect.</li>
+            </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+// --- End of Component ---
+
 
 const App: React.FC = () => {
   const [report, setReport] = useState<AnalysisReportData | null>(null);
@@ -96,6 +123,8 @@ const App: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState('');
   const progressIntervalRef = useRef<number | null>(null);
+  
+  const apiKey = process.env.API_KEY;
 
   const stopProgress = () => {
     if (progressIntervalRef.current) {
@@ -163,7 +192,6 @@ const App: React.FC = () => {
       const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred during analysis.';
       
       let isQuotaError = false;
-      
       try {
         if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('429')) {
           const errorJson = JSON.parse(errorMessage);
@@ -188,15 +216,7 @@ const App: React.FC = () => {
       }
 
       if (!isQuotaError) {
-         if (errorMessage.includes('API key not valid') ||
-            errorMessage.includes('invalid') ||
-            errorMessage.includes('API Key must be set') ||
-            errorMessage.includes('environment variable is not set') ||
-            errorMessage.includes('Requested entity was not found')) {
-          setError("API key configuration error."); // Simplified message trigger
-        } else {
           setError(errorMessage);
-        }
       }
 
     } finally {
@@ -207,7 +227,7 @@ const App: React.FC = () => {
       }, 300); // Small delay to show 100%
     }
   };
-  
+
   const handleReset = () => {
     setReport(null);
     setError(null);
@@ -217,9 +237,60 @@ const App: React.FC = () => {
     setProgress(0);
   }
   
-  const renderContent = () => {
+  const renderAppContent = () => {
     return (
-      <>
+      <div className="max-w-4xl mx-auto">
+        {quotaErrorDetails && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 text-amber-800 dark:text-amber-200 p-4 sm:p-6 mb-6 rounded-lg shadow" role="alert">
+            <p className="font-bold text-lg">API Quota Exceeded</p>
+            <div className="mt-2 text-slate-700 dark:text-slate-300">
+              <p>The analysis failed because the chat log is too large for the current API plan (Free Tier).</p>
+              <p className="mt-4 font-semibold">What you can do:</p>
+              <ul className="list-disc list-inside mt-2 space-y-2 text-sm">
+                  <li>
+                      <strong>Reduce Input Size:</strong> Try again with a smaller section of the chat log.
+                  </li>
+                  <li>
+                      <strong>Upgrade Your Plan:</strong> For large-scale analysis, you can upgrade your Gemini API plan to increase the rate limits.
+                      <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline ml-1">
+                          Manage your billing details.
+                      </a>
+                  </li>
+              </ul>
+              
+              <div className="mt-4 pt-3 border-t border-amber-300 dark:border-amber-700/50">
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">TECHNICAL DETAILS:</p>
+                <ul className="text-xs font-mono bg-amber-100 dark:bg-amber-900/30 p-2 rounded mt-1 text-slate-600 dark:text-slate-300 space-y-1">
+                  <li><span className="font-semibold">Limit Type:</span> {quotaErrorDetails.metric}</li>
+                  <li><span className="font-semibold">Current Limit:</span> {quotaErrorDetails.limit} per minute</li>
+                  <li><span className="font-semibold">Suggested Retry:</span> Wait {quotaErrorDetails.retryDelay} and try again.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && (
+            <div className="bg-red-100 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 sm:p-6 mb-6 rounded-lg shadow" role="alert">
+            <p className="font-bold text-lg">Analysis Failed</p>
+            <div className="mt-2 text-slate-700 dark:text-slate-300">
+              <p>We couldn't generate the report from the input, either because:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                  <li>The data you submitted (chat log or file) was not in the correct format, was too long, or contained content the AI could not process.</li>
+                  <li>There is a temporary issue or outage with the AI backend (Gemini API).</li>
+              </ul>
+              <p className="mt-4">Please check your input and try again. If the problem persists, the service may be temporarily unavailable.</p>
+              
+              <div className="mt-4 pt-3 border-t border-red-300 dark:border-red-700/50">
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">TECHNICAL DETAILS:</p>
+                <p className="text-xs font-mono bg-red-50 dark:bg-red-900/30 p-2 rounded mt-1 text-slate-600 dark:text-slate-300">
+                  {error}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isLoading && (
           <ProgressIndicator progress={progress} message={progressMessage} />
         )}
@@ -228,11 +299,11 @@ const App: React.FC = () => {
           <div>
             <AnalysisReport report={report} />
             <div className="mt-8 text-center">
-               <button 
+                <button 
                 onClick={handleReset}
                 className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                   Analyze Another Chat
-               </button>
+                </button>
             </div>
           </div>
         )}
@@ -240,10 +311,35 @@ const App: React.FC = () => {
         {!report && !isLoading && (
           <ChatInputForm onAnalyze={handleAnalyze} disabled={isLoading} />
         )}
-      </>
+      </div>
+    );
+  }
+  
+  // If the API key is not set, show the instructions screen.
+  if (!apiKey) {
+    return (
+       <div className="min-h-screen bg-slate-900 text-slate-200 font-sans flex flex-col items-center justify-center p-4">
+        <header className="absolute top-0 w-full">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
+                    <div className="flex items-center space-x-3">
+                        <HeaderIcon />
+                        <h1 className="text-xl font-bold text-white tracking-tight">
+                            Save Chat Analyzer
+                        </h1>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <ApiKeyInstructions />
+        <footer className="text-center py-4 mt-8">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Powered by Gemini API</p>
+        </footer>
+      </div>
     );
   }
 
+  // Otherwise, render the main application.
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans">
       <header className="bg-white dark:bg-slate-800/50 shadow-sm sticky top-0 z-10 backdrop-blur-md">
@@ -260,90 +356,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto">
-          {quotaErrorDetails && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 text-amber-800 dark:text-amber-200 p-4 sm:p-6 mb-6 rounded-lg shadow" role="alert">
-              <p className="font-bold text-lg">API Quota Exceeded</p>
-              <div className="mt-2 text-slate-700 dark:text-slate-300">
-                <p>The analysis failed because the chat log is too large for the current API plan (Free Tier).</p>
-                <p className="mt-4 font-semibold">What you can do:</p>
-                <ul className="list-disc list-inside mt-2 space-y-2 text-sm">
-                    <li>
-                        <strong>Reduce Input Size:</strong> Try again with a smaller section of the chat log.
-                    </li>
-                    <li>
-                        <strong>Upgrade Your Plan:</strong> For large-scale analysis, you can upgrade your Gemini API plan to increase the rate limits.
-                        <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline ml-1">
-                            Manage your billing details.
-                        </a>
-                    </li>
-                </ul>
-                
-                <div className="mt-4 pt-3 border-t border-amber-300 dark:border-amber-700/50">
-                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">TECHNICAL DETAILS:</p>
-                  <ul className="text-xs font-mono bg-amber-100 dark:bg-amber-900/30 p-2 rounded mt-1 text-slate-600 dark:text-slate-300 space-y-1">
-                    <li><span className="font-semibold">Limit Type:</span> {quotaErrorDetails.metric}</li>
-                    <li><span className="font-semibold">Current Limit:</span> {quotaErrorDetails.limit} per minute</li>
-                    <li><span className="font-semibold">Suggested Retry:</span> Wait {quotaErrorDetails.retryDelay} and try again.</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {error && !error.includes("API key") && (
-             <div className="bg-red-100 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 sm:p-6 mb-6 rounded-lg shadow" role="alert">
-              <p className="font-bold text-lg">Analysis Failed</p>
-              <div className="mt-2 text-slate-700 dark:text-slate-300">
-                <p>We couldn't generate the report from the input, either because:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                    <li>The data you submitted (chat log or file) was not in the correct format, was too long, or contained content the AI could not process.</li>
-                    <li>There is a temporary issue or outage with the AI backend (Gemini API).</li>
-                </ul>
-                <p className="mt-4">Please check your input and try again. If the problem persists, the service may be temporarily unavailable.</p>
-                
-                <div className="mt-4 pt-3 border-t border-red-300 dark:border-red-700/50">
-                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">TECHNICAL DETAILS:</p>
-                  <p className="text-xs font-mono bg-red-50 dark:bg-red-900/30 p-2 rounded mt-1 text-slate-600 dark:text-slate-300">
-                    {error}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          {error && error.includes("API key") && (
-             <div className="bg-red-100 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 sm:p-6 mb-6 rounded-lg shadow" role="alert">
-              <p className="font-bold text-lg">Vercel Environment Variable Issue</p>
-              <div className="mt-2 text-slate-700 dark:text-slate-300">
-                <p>The application could not connect to the Gemini API because the `VITE_API_KEY` is either missing or invalid in your Vercel project's settings.</p>
-                <p className="mt-4 font-semibold">How to fix this:</p>
-                <ul className="list-disc list-inside mt-2 space-y-2 text-sm">
-                    <li>
-                        Go to your project's settings on Vercel and find the <strong>Environment Variables</strong> section.
-                        <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline ml-1">
-                            Open Vercel Dashboard
-                        </a>
-                    </li>
-                    <li>
-                        Ensure there is a variable with the <strong>Name</strong> set to exactly <code className="text-indigo-600 dark:text-indigo-400 bg-slate-100 dark:bg-slate-700/50 px-1 py-0.5 rounded">VITE_API_KEY</code>.
-                    </li>
-                     <li>
-                        Paste your "central billing API key" into the <strong>Value</strong> field.
-                    </li>
-                    <li>
-                        <strong>Most Important:</strong> Make sure the variable is applied to all environments by checking the boxes for <strong>Production, Preview, and Development.</strong>
-                    </li>
-                    <li>
-                        Click <strong>Save</strong>, then go to the "Deployments" tab and <strong>Redeploy</strong> your application for the change to take effect.
-                    </li>
-                </ul>
-              </div>
-            </div>
-          )}
-          
-          {renderContent()}
-          
-        </div>
+        {renderAppContent()}
       </main>
       
       <footer className="text-center py-4 mt-8">

@@ -1,15 +1,21 @@
+
 import { GoogleGenAI } from "@google/genai";
 import type { AnalysisReportData } from '../types';
 import { SYSTEM_INSTRUCTION, RESPONSE_SCHEMA } from '../constants';
 
+// FIX: Use process.env.API_KEY as required by the coding guidelines and update related comments and error messages.
 export async function analyzeChatLog(chatLog: string, instructorNames: string): Promise<AnalysisReportData> {
   
-  if (!process.env.VITE_API_KEY) {
-    throw new Error("VITE_API_KEY environment variable is not set. Please check your Vercel project settings.");
+  // The API key is retrieved from environment variables.
+  const apiKey = process.env.API_KEY;
+
+  if (!apiKey) {
+    // This error will be shown if the check in App.tsx is bypassed for some reason.
+    throw new Error("API_KEY is not configured. Please ensure it is set in your environment variables.");
   }
 
-  // Use the VITE_ prefix to make the key available in the browser
-  const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
+  // Create a new instance for each call to ensure the latest key from the environment is used.
+  const ai = new GoogleGenAI({ apiKey });
 
   const userPrompt = `
   Here is the chat log. Please analyze it.
@@ -50,7 +56,7 @@ export async function analyzeChatLog(chatLog: string, instructorNames: string): 
         throw new Error("The AI returned incomplete or malformed data. This can happen with very complex requests or a service interruption. Please try again.");
     }
     if (error instanceof Error) {
-        throw new Error(error.message);
+        throw error; // Re-throw the original error to be handled by the UI
     }
     throw new Error("An unknown error occurred while processing the AI response.");
   }
