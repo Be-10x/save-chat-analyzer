@@ -1,3 +1,7 @@
+// FIX: Add a triple-slash directive to include Vite client types.
+// This resolves the error "Property 'env' does not exist on type 'ImportMeta'"
+// by making Vite's `import.meta.env` properties available globally.
+/// <reference types="vite/client" />
 
 export interface GroupedMessage {
   theme: string;

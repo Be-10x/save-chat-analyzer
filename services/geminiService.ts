@@ -1,20 +1,20 @@
-
 import { GoogleGenAI } from "@google/genai";
 import type { AnalysisReportData } from '../types';
 import { SYSTEM_INSTRUCTION, RESPONSE_SCHEMA } from '../constants';
 
-// FIX: Use process.env.API_KEY as required by the coding guidelines and update related comments and error messages.
+// FIX: Use import.meta.env for client-side variables in Vite.
 export async function analyzeChatLog(chatLog: string, instructorNames: string): Promise<AnalysisReportData> {
   
-  // The API key is retrieved from environment variables.
-  const apiKey = process.env.API_KEY;
+  // The API key is retrieved from environment variables as per Vite's standard.
+  const apiKey = import.meta.env.VITE_API_KEY;
 
   if (!apiKey) {
     // This error will be shown if the check in App.tsx is bypassed for some reason.
-    throw new Error("API_KEY is not configured. Please ensure it is set in your environment variables.");
+    throw new Error("VITE_API_KEY is not configured. Please ensure it is set in your environment variables and the project is redeployed.");
   }
 
   // Create a new instance for each call to ensure the latest key from the environment is used.
+  // The SDK internally handles the `process.env.API_KEY` when available, but we explicitly pass it for clarity and consistency in client-side apps.
   const ai = new GoogleGenAI({ apiKey });
 
   const userPrompt = `

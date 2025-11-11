@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import type { AnalysisReportData } from './types';
 import { analyzeChatLog } from './services/geminiService';
@@ -85,7 +84,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ progress, message
 };
 // --- End of Component ---
 
-// FIX: Use process.env.API_KEY as required by the coding guidelines, and update the API key instructions component to be more generic and admin-focused.
+// FIX: Update instructions to match Vite's required `VITE_` prefix.
 // --- Updated API Key Instructions Screen for Admins ---
 const ApiKeyInstructions: React.FC = () => {
   return (
@@ -93,17 +92,17 @@ const ApiKeyInstructions: React.FC = () => {
       <div className="p-6 sm:p-8">
         <h2 className="text-2xl font-bold text-white mb-2">Environment Variable Configuration Error</h2>
         <p className="text-slate-300 mb-6">
-          The application could not connect to the Gemini API because the <code className="text-indigo-400 bg-slate-900 px-1.5 py-1 rounded text-sm">API_KEY</code> environment variable is missing or invalid.
+          The application could not connect to the Gemini API because the <code className="text-indigo-400 bg-slate-900 px-1.5 py-1 rounded text-sm">VITE_API_KEY</code> environment variable is missing or invalid.
         </p>
       
         <div className="text-left text-sm w-full">
             <h3 className="font-bold text-lg text-slate-200 mb-3">For Administrators:</h3>
             <ul className="list-disc list-inside space-y-3 text-slate-300">
                 <li>
-                    Please configure the <strong>API_KEY</strong> environment variable in your deployment settings.
+                    Please configure the <strong>VITE_API_KEY</strong> environment variable in your deployment settings (e.g., Vercel).
                 </li>
                 <li>Ensure the variable is applied to all environments (Production, Preview, and Development).</li>
-                <li>After setting the variable, you may need to redeploy the application for the change to take effect.</li>
+                <li>After setting the variable, you must <strong>redeploy</strong> the application for the change to take effect.</li>
             </ul>
         </div>
       </div>
@@ -124,7 +123,8 @@ const App: React.FC = () => {
   const [progressMessage, setProgressMessage] = useState('');
   const progressIntervalRef = useRef<number | null>(null);
   
-  const apiKey = process.env.API_KEY;
+  // CORRECT: Use import.meta.env for client-side variables in Vite.
+  const apiKey = import.meta.env.VITE_API_KEY;
 
   const stopProgress = () => {
     if (progressIntervalRef.current) {
